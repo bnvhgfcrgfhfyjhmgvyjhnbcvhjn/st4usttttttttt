@@ -1,0 +1,897 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>st4rdust</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    :root {
+      --primary: #0ff1ce;
+      --secondary: #1e2337;
+      --navbar-bg: rgba(30, 35, 55, 0.9);
+      --glass: rgba(255,255,255,0.08);
+      --glow: 0 0 30px 5px #0ff1ce77;
+    }
+    body {
+      margin: 0;
+      font-family: 'Orbitron', 'Montserrat', Arial, sans-serif;
+      background: linear-gradient(120deg, #181c29 0%, #1e2337 100%);
+      color: #fff;
+      height: 100vh;
+      overflow: hidden;
+      animation: bgMove 10s linear infinite alternate;
+    }
+    @keyframes bgMove {
+      from { background-position: 0 0; }
+      to { background-position: 100% 100%; }
+    }
+    .startup-bg {
+      position: fixed;
+      z-index: 5000;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: #10121a;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: opacity .7s cubic-bezier(.4,0,.2,1);
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .startup-bg.hide {
+      opacity: 0;
+      pointer-events: none;
+    }
+    .startup-panel {
+      background: rgba(24,28,41,0.97);
+      border-radius: 20px;
+      box-shadow: 0 0 80px #0ff1ce33;
+      padding: 48px 38px 40px 38px;
+      min-width: 380px;
+      text-align: left;
+      border: 2px solid #0ff1ce88;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      max-width: 90vw;
+      position: relative;
+    }
+    .startup-coding {
+      font-family: 'Fira Mono', 'Consolas', 'Menlo', 'monospace';
+      font-size: 1.2em;
+      color: #80fff9;
+      white-space: pre-wrap;
+      background: #181c29;
+      border-radius: 10px;
+      padding: 18px 18px 18px 24px;
+      margin-bottom: 18px;
+      width: 100%;
+      min-height: 190px;
+      box-shadow: 0 0 20px #0ff1ce22 inset;
+      border: 1px solid #0ff1ce44;
+      letter-spacing: 0.02em;
+      line-height: 1.5;
+      overflow: hidden;
+      position: relative;
+    }
+    .startup-msg {
+      width: 100%;
+      text-align: center;
+      font-family: 'Orbitron', 'Montserrat', Arial, sans-serif;
+      font-size: 1.8em;
+      color: #0ff1ce;
+      opacity: 0;
+      letter-spacing: 0.18em;
+      margin-top: 10px;
+      text-shadow: 0 0 12px #0ff1ce77, 0 2px 2px #111;
+      pointer-events: none;
+      transition: opacity .7s;
+    }
+    .startup-msg.active {
+      opacity: 1;
+      transition: opacity .7s;
+    }
+
+    .password-panel {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      padding: 50px 20px;
+      background: rgba(16,18,26,0.96);
+      border-radius: 20px;
+      z-index: 10;
+      animation: fadeIn .7s;
+    }
+    .password-title {
+      color: #0ff1ce;
+      font-size: 2em;
+      font-family: 'Orbitron', 'Montserrat', Arial, sans-serif;
+      margin-bottom: 20px;
+      letter-spacing: 0.13em;
+      text-shadow: 0 0 9px #0ff1ce33;
+    }
+    .password-input {
+      font-size: 1.2em;
+      padding: 12px 20px;
+      border-radius: 10px;
+      border: 2px solid #0ff1ce77;
+      background: #181c29;
+      color: #fff;
+      margin-bottom: 18px;
+      outline: none;
+      text-align: center;
+      font-family: 'Fira Mono', 'Consolas', 'Menlo', 'monospace';
+      box-shadow: 0 0 10px #0ff1ce22;
+    }
+    .password-btn {
+      font-size: 1.1em;
+      padding: 12px 34px;
+      border-radius: 8px;
+      border: 2px solid #0ff1ce;
+      background: #0ff1ce22;
+      color: #0ff1ce;
+      font-family: inherit;
+      cursor: pointer;
+      margin-bottom: 12px;
+      transition: all 0.18s;
+    }
+    .password-btn:hover {
+      background: #0ff1ce;
+      color: #181c29;
+      border: 2px solid #fff;
+    }
+    .password-error {
+      color: #ff4b68;
+      font-size: 1.08em;
+      min-height: 20px;
+      margin-bottom: 0;
+      margin-top: 6px;
+      text-align: center;
+      width: 100%;
+      letter-spacing: .09em;
+      opacity: 0.87;
+    }
+
+    .navbar {
+      position: fixed;
+      top: 0; 
+      right: 0;
+      width: 80px;
+      height: 100vh;
+      background: var(--navbar-bg);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      box-shadow: -2px 0 16px #0ff1ce44;
+      z-index: 2;
+      backdrop-filter: blur(10px);
+      border-left: 2px solid #0ff1ce44;
+      animation: navbarSlideIn 1s cubic-bezier(.8,-0.6,0.2,1.5);
+      gap: 0;
+    }
+    @keyframes navbarSlideIn {
+      from { right: -100px; opacity: 0; }
+      to { right: 0; opacity: 1; }
+    }
+    .nav-icon {
+      width: 48px;
+      height: 48px;
+      margin: 18px 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 20px;
+      background: var(--glass);
+      box-shadow: var(--glow);
+      cursor: pointer;
+      transition: transform 0.3s, box-shadow 0.3s, background 0.2s;
+      border: 2px solid transparent;
+      filter: drop-shadow(0 0 6px #0ff1ce33);
+      outline: none;
+    }
+    .nav-icon.active, .nav-icon:focus, .nav-icon:hover {
+      transform: scale(1.13) rotate(-6deg);
+      box-shadow: 0 0 40px 10px #0ff1ce99, var(--glow);
+      background: rgba(0,255,230,0.10);
+      border: 2px solid #0ff1cecc;
+    }
+    main {
+      margin-right: 90px;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      animation: mainFadeIn 1.2s cubic-bezier(.8,-0.6,0.2,1.5);
+    }
+    @keyframes mainFadeIn {
+      from { opacity: 0; transform: translateY(130px);}
+      to { opacity: 1; transform: translateY(0);}
+    }
+    .stellar-card {
+      background: var(--glass);
+      border-radius: 28px;
+      padding: 48px 64px;
+      box-shadow: 0 8px 48px #0ff1ce44;
+      min-width: 380px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+      border: 1.5px solid #0ff1ce66;
+      animation: cardGlow 2s ease-in-out infinite alternate;
+      min-height: 340px;
+      display: flex;
+      flex-direction: column;
+      transition: min-height .4s;
+    }
+    .stellar-title {
+      font-size: 2.4rem;
+      letter-spacing: .2em;
+      color: var(--primary);
+      margin-bottom: 16px;
+      text-shadow: 0 0 12px #0ff1ce7a, 0 2px 2px #111;
+      animation: titlePulse 2s infinite alternate;
+    }
+    .stellar-section {
+      display: none;
+      flex: 1;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      opacity: 0;
+      transition: opacity .5s;
+    }
+    .stellar-section.active {
+      display: flex;
+      opacity: 1;
+      animation: fadeIn .9s;
+    }
+    @keyframes cardGlow {
+      from { box-shadow: 0 0 30px 5px #0ff1ce44; }
+      to { box-shadow: 0 0 60px 15px #0ff1ce99; }
+    }
+    @keyframes titlePulse {
+      from { color: #0ff1ce; text-shadow: 0 0 10px #0ff1ce44;}
+      to { color: #fff; text-shadow: 0 0 40px #0ff1ceaa;}
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(30px);}
+      to { opacity: 1; transform: translateY(0);}
+    }
+    .stellar-desc {
+      font-size: 1.25rem;
+      color: #eee;
+      margin-bottom: 24px;
+      opacity: 0.86;
+      animation: fadeIn 1.5s 0.5s backwards;
+    }
+    .neon-btn {
+      padding: 16px 36px;
+      border: 2px solid #0ff1ce;
+      border-radius: 12px;
+      background: transparent;
+      color: #0ff1ce;
+      font-size: 1.1em;
+      font-family: inherit;
+      letter-spacing: .1em;
+      cursor: pointer;
+      outline: none;
+      box-shadow: 0 0 18px #0ff1ce55;
+      text-shadow: 0 0 8px #0ff1ce;
+      margin: 12px 0;
+      transition: all 0.25s cubic-bezier(.8,-0.6,0.2,1.5);
+      animation: buttonPop 1.2s cubic-bezier(.8,-0.6,0.2,1.5);
+    }
+    .neon-btn:hover {
+      color: #fff;
+      background: #0ff1ce26;
+      box-shadow: 0 0 36px #0ff1ce99, 0 0 80px #0ff1ce33;
+      border: 2px solid #fff;
+      transform: scale(1.08) rotate(-2deg);
+    }
+    @keyframes buttonPop {
+      from { transform: scale(0.5);}
+      to { transform: scale(1);}
+    }
+    .stellar-card::after {
+      content: "";
+      position: absolute;
+      left: -40%;
+      top: -20%;
+      width: 180%;
+      height: 180%;
+      background: conic-gradient(from 90deg at 50% 50%, #0ff1ce50, #fff0, #0ff1ce20, #fff0, #0ff1ce50);
+      filter: blur(60px);
+      opacity: 0.5;
+      pointer-events: none;
+      animation: rotateBG 7s linear infinite;
+      z-index: 0;
+    }
+    @keyframes rotateBG {
+      0% { transform: rotate(0deg);}
+      100% { transform: rotate(360deg);}
+    }
+    .chat-window {
+      width: 100%;
+      max-width: 400px;
+      margin: 0 auto;
+      background: rgba(30,40,50,0.15);
+      border-radius: 16px;
+      box-shadow: 0 4px 32px #0ff1ce22;
+      display: flex;
+      flex-direction: column;
+      height: 300px;
+      overflow: hidden;
+      border: 1px solid #0ff1ce33;
+      position: relative;
+    }
+    .chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 18px 16px 12px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      font-size: 1.05em;
+      scrollbar-width: thin;
+      scrollbar-color: #0ff1ce77 #181c29;
+    }
+    .chat-msg {
+      max-width: 85%;
+      padding: 10px 18px;
+      background: rgba(0,255,230,0.07);
+      border-radius: 14px 14px 4px 14px;
+      margin-bottom: 3px;
+      align-self: flex-end;
+      box-shadow: 0 2px 8px #0ff1ce22;
+      border: 1px solid #0ff1ce33;
+      word-break: break-word;
+      position: relative;
+      display: block;
+      white-space: pre-line;
+    }
+    .chat-msg.bot {
+      align-self: flex-start;
+      background: rgba(100,255,255,0.09);
+      border-radius: 14px 14px 14px 4px;
+      border: 1px solid #0ff1ce77;
+      color: #00f0ff;
+    }
+    .chat-msg.you {
+      border: 1px solid #0ff1ce88;
+      background: rgba(0,255,230,0.14);
+      align-self: flex-end;
+      color: #fff;
+    }
+    .chat-msg .chat-user {
+      font-size: .92em;
+      font-weight: bold;
+      letter-spacing: .05em;
+      color: #0ff1ce;
+      margin-right: 7px;
+      display: inline;
+    }
+    .chat-msg.bot .chat-user {
+      color: #00eaff;
+      font-style: italic;
+    }
+    .chat-msg.you .chat-user {
+      color: #fff;
+    }
+    .chat-input-row {
+      display: flex;
+      border-top: 1px solid #0ff1ce33;
+      background: rgba(30,40,50,0.11);
+      align-items: center;
+      padding: 6px 5px;
+      position: relative;
+    }
+    .chat-input {
+      flex: 1;
+      padding: 12px;
+      font-size: 1.08em;
+      border: none;
+      border-radius: 9px;
+      background: rgba(0,255,230,0.08);
+      color: #fff;
+      outline: none;
+      margin-right: 6px;
+      box-shadow: 0 0 10px #0ff1ce22;
+      font-family: inherit;
+      transition: background 0.15s;
+    }
+    .chat-input:focus {
+      background: rgba(0,255,230,0.13);
+      box-shadow: 0 0 22px #0ff1ce33;
+    }
+    .chat-send-btn {
+      border: 1px solid #0ff1ce;
+      background: #181c29;
+      color: #0ff1ce;
+      border-radius: 8px;
+      padding: 10px 16px;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 1em;
+      transition: background .2s, color .2s;
+      box-shadow: 0 0 9px #0ff1ce22;
+    }
+    .chat-send-btn:hover {
+      background: #0ff1ce;
+      color: #181c29;
+      border: 1px solid #fff;
+    }
+    .stellar-modal-bg {
+      position: fixed;
+      z-index: 2000;
+      top:0; left:0; right:0; bottom:0;
+      background: rgba(20,30,40,0.73);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: opacity .3s;
+    }
+    .stellar-modal {
+      background: rgba(30,35,50,0.99);
+      border-radius: 18px;
+      box-shadow: 0 0 22px #0ff1ce55;
+      padding: 32px 28px 22px 28px;
+      min-width: 320px;
+      text-align: center;
+      animation: modalPop .6s;
+      border: 2px solid #0ff1ce88;
+    }
+    @keyframes modalPop {
+      from { opacity: 0; transform: scale(0.7);}
+      to { opacity: 1; transform: scale(1);}
+    }
+    .modal-title {
+      font-size: 1.55em;
+      color: #0ff1ce;
+      margin-bottom: 18px;
+      letter-spacing: .12em;
+      text-shadow: 0 0 8px #0ff1ce44;
+    }
+    .modal-input {
+      padding: 14px 18px;
+      border-radius: 10px;
+      border: 2px solid #0ff1ce88;
+      outline: none;
+      background: #181c36;
+      color: #fff;
+      font-size: 1.08em;
+      margin-bottom: 16px;
+      width: 80%;
+      margin-left: 10%;
+      transition: border .2s;
+      box-shadow: 0 0 12px #0ff1ce22;
+      text-align: center;
+    }
+    .modal-input:focus { border: 2px solid #0ff1cecc; }
+    .modal-btn {
+      padding: 13px 32px;
+      border-radius: 9px;
+      border: 2px solid #0ff1ce;
+      background: #0ff1ce22;
+      color: #0ff1ce;
+      font-size: 1.1em;
+      font-family: inherit;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-top: 10px;
+    }
+    .modal-btn:hover {
+      background: #0ff1ce;
+      color: #181c36;
+      border: 2px solid #fff;
+    }
+    .modal-error {
+      color: #ff4b68;
+      font-size: 1em;
+      margin-bottom: 7px;
+      margin-top: 4px;
+      min-height: 23px;
+    }
+    ::-webkit-scrollbar { width: 8px; background: #181c29; }
+    ::-webkit-scrollbar-thumb { background: #0ff1ce77; border-radius: 4px; }
+    @media (max-width: 700px) {
+      .stellar-card { min-width: 90vw; padding: 28px 10vw;}
+      .navbar { width: 60px; }
+      .nav-icon { width: 36px; height: 36px;}
+      .chat-window { max-width: 98vw;}
+      .stellar-modal { min-width: 90vw; }
+      .startup-panel { min-width: 70vw; }
+    }
+  </style>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Montserrat:wght@400;600&family=Fira+Mono:wght@500&display=swap" rel="stylesheet">
+  <script>
+    function gs(name, data, cb) {
+      google.script.run.withSuccessHandler(cb)[name](data);
+    }
+    function getSessionId() {
+      let sid = localStorage.getItem('st4rdust_sid');
+      if (!sid) {
+        sid = ([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g, c =>
+          (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)
+        );
+        localStorage.setItem('st4rdust_sid', sid);
+      }
+      return sid;
+    }
+  </script>
+</head>
+<body>
+  <!-- Startup Animation -->
+  <div id="startup-bg" class="startup-bg">
+    <div class="startup-panel">
+      <pre class="startup-coding" id="startup-coding"></pre>
+      <div class="startup-msg" id="startup-bootmsg">
+        Booting up site...
+      </div>
+      <div class="startup-msg" id="startup-welcome">
+        Welcome
+      </div>
+      <!-- Password screen -->
+      <div class="password-panel" id="password-panel">
+        <div class="password-title">Enter Access Password</div>
+        <input class="password-input" id="password-input" type="password" autocomplete="off" placeholder="Password">
+        <button class="password-btn" id="password-btn">Access</button>
+        <div class="password-error" id="password-error"></div>
+      </div>
+    </div>
+  </div>
+  <!-- End Startup Animation -->
+
+  <div id="username-modal-bg" class="stellar-modal-bg" style="display:none;">
+    <div class="stellar-modal">
+      <div class="modal-title">Enter a username to join chat</div>
+      <div class="modal-error" id="modal-error"></div>
+      <input class="modal-input" id="modal-username" type="text" placeholder="Username" maxlength="20" autocomplete="off" />
+      <button class="modal-btn" onclick="submitUsername()">Enter Chat</button>
+    </div>
+  </div>
+  <nav class="navbar">
+    <button class="nav-icon active" id="nav-home" title="Home" tabindex="0" aria-label="Home">
+      <svg width="28" height="28" fill="none" stroke="#0ff1ce" stroke-width="2" viewBox="0 0 24 24">
+        <path d="M4 12l8-8 8 8"/><path d="M4 12v8h16v-8"/>
+      </svg>
+    </button>
+    <button class="nav-icon" id="nav-arcade" title="Arcade" tabindex="0" aria-label="Arcade">
+      <svg width="28" height="28" fill="none" stroke="#0ff1ce" stroke-width="2" viewBox="0 0 24 24">
+        <rect x="2" y="8" width="20" height="8" rx="4"/>
+        <circle cx="7" cy="12" r="1.5"/>
+        <circle cx="17" cy="12" r="1.5"/>
+        <path d="M12 12v2"/>
+      </svg>
+    </button>
+    <button class="nav-icon" id="nav-settings" title="Settings" tabindex="0" aria-label="Settings">
+      <svg width="28" height="28" fill="none" stroke="#0ff1ce" stroke-width="2" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="3"/>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h0a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h0a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v0a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+      </svg>
+    </button>
+    <button class="nav-icon" id="nav-chat" title="Chat" tabindex="0" aria-label="Chat">
+      <svg width="28" height="28" fill="none" stroke="#0ff1ce" stroke-width="2" viewBox="0 0 24 24">
+        <path d="M21 11.5a8.38 8.38 0 0 1-1.9 5.4A8.5 8.5 0 0 1 12 21a8.38 8.38 0 0 1-5.4-1.9L3 21l1.4-3.6A8.38 8.38 0 0 1 3 11.5 8.5 8.5 0 0 1 12 3a8.5 8.5 0 0 1 8.5 8.5Z"/>
+      </svg>
+    </button>
+  </nav>
+  <main>
+    <section class="stellar-card" id="stellar-content">
+      <div class="stellar-title" id="stellar-title">st4rdust</div>
+      <div class="stellar-section active" id="section-home">
+        <div class="stellar-desc">
+          Welcome to the future! <br>
+          st4rdust is your portal to an animated, interactive, and futuristic web experience.<br>
+          <span style="opacity:.7;">Use the menu to explore Arcade and Settings!</span>
+        </div>
+        <button class="neon-btn" id="stellar-btn" onclick="stellarEffect()">Engage Warp Drive</button>
+      </div>
+      <div class="stellar-section" id="section-arcade">
+        <div class="stellar-title" style="font-size:2rem;margin-bottom:12px">Arcade</div>
+        <div class="stellar-desc">
+          <span style="font-size:1.5em; filter:drop-shadow(0 0 6px #0ff1ce77);">&#127918;</span><br>
+          <b>Coming soon:</b> Futuristic mini-games. <br>
+          <span style="opacity:0.8;">Stay tuned for the next level of fun!</span>
+        </div>
+        <button class="neon-btn" onclick="stellarGamePreview()">Preview FX</button>
+      </div>
+      <div class="stellar-section" id="section-settings">
+        <div class="stellar-title" style="font-size:2rem;margin-bottom:12px">Settings</div>
+        <form id="settings-form" style="margin-top:18px;">
+          <label style="display:block; margin-bottom:12px;">
+            <span>Neon Intensity</span>
+            <input type="range" id="neon-intensity" min="0" max="2" step="0.01" value="1"
+              style="width: 160px; margin-left: 12px;">
+          </label>
+          <label style="display:block; margin-bottom:12px;">
+            <span>Animation Speed</span>
+            <input type="range" id="anim-speed" min="0.4" max="2" step="0.01" value="1"
+              style="width: 160px; margin-left: 12px;">
+          </label>
+          <button class="neon-btn" type="button" onclick="applySettings()">Apply Settings</button>
+        </form>
+      </div>
+      <div class="stellar-section" id="section-chat">
+        <div class="stellar-title" style="font-size:2rem;margin-bottom:12px">Chat</div>
+        <div class="chat-window">
+          <div class="chat-messages" id="chat-messages"></div>
+          <form class="chat-input-row" id="chat-form" onsubmit="sendChatMessage(event)">
+            <input class="chat-input" id="chat-input" type="text" placeholder="Type your message..." autocomplete="off" maxlength="200"/>
+            <button class="chat-send-btn" type="submit">Send</button>
+          </form>
+        </div>
+      </div>
+    </section>
+  </main>
+  <script>
+    // --- Startup animation ---
+    // Fake coding lines & confirmations
+    const startupCodingBlocks = [
+      [ // Block 1
+        "System initializing...",
+        "import * as st4rdust from 'universe';",
+        "let user = await st4rdust.boot();"
+      ],
+      [ // Block 2
+        "Connecting to remote server...",
+        "[OK] Connection established",
+        "Requesting authentication tokens...",
+        "[OK] Auth tokens received"
+      ],
+      [ // Block 3
+        "Loading modules: chat, arcade, settings",
+        "[OK] Modules loaded",
+        "Running diagnostics...",
+        "[OK] All systems operational"
+      ],
+      [ // Block 4
+        "Rendering st4rdust interface...",
+        "[OK] UI initialized",
+        "// Standby for cosmic experience"
+      ]
+    ];
+    let startupBlock = 0, blockLine = 0, charIdx = 0, codeLines = [];
+    const typingSpeed = 13, linePause = 370, blockPause = 800;
+    let startupTimeouts = [];
+    function typeStartupCoding() {
+      if(startupBlock >= startupCodingBlocks.length) {
+        setTimeout(showBootMsg, 200);
+        return;
+      }
+      let block = startupCodingBlocks[startupBlock];
+      if(blockLine === 0 && charIdx === 0) codeLines.push('');
+      if(blockLine < block.length) {
+        let line = block[blockLine];
+        if(charIdx < line.length) {
+          if(charIdx === 0) codeLines[codeLines.length-1] = "";
+          codeLines[codeLines.length-1] += line[charIdx];
+          document.getElementById('startup-coding').textContent = codeLines.join('\n');
+          charIdx++;
+          startupTimeouts.push(setTimeout(typeStartupCoding, typingSpeed + Math.random()*24));
+        } else {
+          codeLines[codeLines.length-1] = line;
+          document.getElementById('startup-coding').textContent = codeLines.join('\n');
+          blockLine++; charIdx = 0;
+          if(blockLine < block.length) codeLines.push("");
+          startupTimeouts.push(setTimeout(typeStartupCoding, linePause));
+        }
+      } else {
+        blockLine = 0; charIdx = 0;
+        codeLines.push("");
+        startupBlock++;
+        startupTimeouts.push(setTimeout(typeStartupCoding, blockPause));
+      }
+    }
+
+    function showBootMsg() {
+      document.getElementById('startup-bootmsg').classList.add('active');
+      // After 10 seconds, show welcome
+      startupTimeouts.push(setTimeout(showWelcomeMsg, 10000));
+    }
+    function showWelcomeMsg() {
+      document.getElementById('startup-bootmsg').classList.remove('active');
+      document.getElementById('startup-welcome').classList.add('active');
+      // After 2 seconds, show password panel
+      startupTimeouts.push(setTimeout(showPasswordPanel, 2000));
+    }
+    function showPasswordPanel() {
+      document.getElementById('startup-welcome').classList.remove('active');
+      document.getElementById('password-panel').style.display = "flex";
+      setTimeout(()=>{document.getElementById('password-input').focus();}, 100);
+    }
+    function hideStartup() {
+      document.getElementById('startup-bg').classList.add('hide');
+      setTimeout(() => {
+        document.getElementById('startup-bg').style.display = "none";
+      }, 700);
+    }
+    // Password logic
+    function checkPassword() {
+      const input = document.getElementById('password-input');
+      const btn = document.getElementById('password-btn');
+      const error = document.getElementById('password-error');
+      if(input.value === "stellarrevamp") {
+        error.textContent = "";
+        btn.disabled = true;
+        input.disabled = true;
+        setTimeout(()=> {
+          hideStartup();
+        }, 400);
+      } else {
+        error.textContent = "Incorrect password. Try again.";
+        input.value = "";
+        input.focus();
+      }
+    }
+    window.addEventListener('DOMContentLoaded', function(){
+      document.getElementById('startup-bootmsg').classList.remove('active');
+      document.getElementById('startup-welcome').classList.remove('active');
+      // Start coding animation
+      typeStartupCoding();
+      // Username check (main app)
+      gs('getStellarUsername', getSessionId(), function(name){
+        if(name && name.length >= 3) {
+          myUsername = name;
+          chatReady = true;
+        }
+      });
+      // Password submit
+      document.getElementById('password-btn').onclick = checkPassword;
+      document.getElementById('password-input').addEventListener('keydown', function(e){
+        if(e.key === "Enter") checkPassword();
+      });
+    });
+
+    // --- Main app logic below (unchanged except st4rdust naming) ---
+    function stellarEffect() {
+      const btn = document.getElementById('stellar-btn');
+      btn.innerText = "Warp Engaged!";
+      btn.style.background = "#0ff1ce99";
+      btn.style.color = "#111";
+      setTimeout(() => {
+        btn.innerText = "Engage Warp Drive";
+        btn.style.background = "";
+        btn.style.color = "#0ff1ce";
+      }, 1200);
+      const card = document.getElementById('stellar-content');
+      card.style.boxShadow = "0 0 100px 30px #0ff1ceee";
+      setTimeout(() => {
+        card.style.boxShadow = "";
+      }, 700);
+    }
+    function stellarGamePreview() {
+      const card = document.getElementById('stellar-content');
+      card.animate([
+        { filter: 'hue-rotate(0deg)' },
+        { filter: 'hue-rotate(180deg) blur(2px)' },
+        { filter: 'hue-rotate(0deg)' }
+      ], { duration: 900 });
+    }
+    function applySettings() {
+      const neon = document.getElementById('neon-intensity').value;
+      document.documentElement.style.setProperty('--glow', `0 0 ${30 * neon + 5}px 5px #0ff1ce${Math.floor(77 * neon).toString(16)}`);
+      const speed = document.getElementById('anim-speed').value;
+      document.querySelectorAll('main, .stellar-title, .stellar-card, .neon-btn').forEach(el => {
+        el.style.animationDuration = `${speed}s`;
+      });
+      stellarEffect();
+    }
+    const navOrder = ['home', 'arcade', 'settings', 'chat'];
+    navOrder.forEach(section => {
+      document.getElementById('nav-' + section).addEventListener('click', () => switchSection(section));
+      document.getElementById('nav-' + section).addEventListener('keydown', e => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          switchSection(section);
+        }
+      });
+    });
+    function switchSection(section) {
+      document.querySelectorAll('.stellar-section').forEach(sec => sec.classList.remove('active'));
+      document.getElementById('section-' + section).classList.add('active');
+      document.querySelectorAll('.nav-icon').forEach(icon => icon.classList.remove('active'));
+      document.getElementById('nav-' + section).classList.add('active');
+      if(section === 'chat' && chatReady) setTimeout(() => document.getElementById('chat-input').focus(), 300);
+      if(section === 'chat') showChatOrModal();
+    }
+    let chatReady = false;
+    let sessionId = getSessionId();
+    let myUsername = "";
+    let chatTimer = null;
+    function showUsernameModal(err) {
+      document.getElementById('modal-error').textContent = err||"";
+      document.getElementById('modal-username').value = "";
+      document.getElementById('username-modal-bg').style.display = "";
+      setTimeout(() => document.getElementById('modal-username').focus(), 100);
+    }
+    function hideUsernameModal() {
+      document.getElementById('username-modal-bg').style.display = "none";
+    }
+    function submitUsername() {
+      const val = document.getElementById('modal-username').value.trim().replace(/[^A-Za-z0-9_\- ]/g, "");
+      if(!val || val.length < 3) {
+        document.getElementById('modal-error').textContent = "Username must be at least 3 characters.";
+        return;
+      }
+      gs('setStellarUsername', { sessionId: sessionId, username: val }, function(success) {
+        if(success) {
+          myUsername = val;
+          hideUsernameModal();
+          chatReady = true;
+          showChat();
+        } else {
+          document.getElementById('modal-error').textContent = "Username error. Try again.";
+        }
+      });
+    }
+    document.getElementById('modal-username').addEventListener('keydown', function(e){
+      if(e.key === "Enter") submitUsername();
+    });
+    function showChatOrModal() {
+      if(!chatReady) {
+        showUsernameModal();
+      } else {
+        showChat();
+      }
+    }
+    function showChat() {
+      fetchChat();
+      if(chatTimer) clearInterval(chatTimer);
+      chatTimer = setInterval(fetchChat, 2000);
+    }
+    function fetchChat() {
+      gs('getStellarChat', {}, function(res) {
+        const messages = res && res.messages ? res.messages : [];
+        const chatMessagesDiv = document.getElementById('chat-messages');
+        const prevCount = chatMessagesDiv.children.length;
+        const isAtBottom = 
+          chatMessagesDiv.scrollTop + chatMessagesDiv.clientHeight >= chatMessagesDiv.scrollHeight - 5;
+        const prevScrollTop = chatMessagesDiv.scrollTop;
+        chatMessagesDiv.innerHTML = "";
+        messages.forEach(msg => {
+          const msgDiv = document.createElement('div');
+          msgDiv.className = 'chat-msg' +
+            (msg.user === myUsername ? ' you' : msg.user === "StellarBot" ? ' bot' : '');
+          msgDiv.innerHTML = '<span class="chat-user">' + escapeHtml(msg.user) + ':</span> ';
+          const spanMsg = document.createElement('span');
+          spanMsg.innerText = msg.text;
+          msgDiv.appendChild(spanMsg);
+          chatMessagesDiv.appendChild(msgDiv);
+        });
+        window.requestAnimationFrame(() => {
+          if (isAtBottom || messages.length > prevCount) {
+            chatMessagesDiv.scrollTop = chatMessagesDiv.scrollHeight;
+          } else {
+            chatMessagesDiv.scrollTop = prevScrollTop;
+          }
+        });
+      });
+    }
+    function sendChatMessage(e) {
+      e.preventDefault();
+      if(!chatReady) {
+        showUsernameModal("Please enter a username first.");
+        return false;
+      }
+      const input = document.getElementById('chat-input');
+      let text = input.value.trim();
+      if (!text) return false;
+      if(text.length > 200) text = text.slice(0,200);
+      input.value = '';
+      gs('sendStellarChat', {sessionId: sessionId, text: text}, function(success){
+        if(success) fetchChat();
+      });
+      return false;
+    }
+    function escapeHtml(str) {
+      return (str||"").replace(/[&<>"']/g, function(m) {
+        return ({
+          "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+        })[m];
+      });
+    }
+  </script>
+</body>
+</html>
