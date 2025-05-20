@@ -25,6 +25,43 @@
       from { background-position: 0 0; }
       to { background-position: 100% 100%; }
     }
+    /* --- Begin new/modified styles for flashbang/admin panel --- */
+    #flashbang-overlay {
+      position: fixed;
+      left: 0; top: 0; width: 100vw; height: 100vh;
+      background: white;
+      opacity: 1;
+      z-index: 9999;
+      pointer-events: none;
+      transition: opacity 1s;
+    }
+    #admin-panel {
+      display: none;
+      margin: 12px 0;
+      padding: 14px 18px;
+      border-radius: 12px;
+      background: rgba(255,255,255,0.04);
+      border: 1.5px solid #0ff1ce99;
+      text-align: left;
+    }
+    #admin-panel button {
+      margin: 4px 0;
+      padding: 10px 18px;
+      border-radius: 7px;
+      border: 1.5px solid #0ff1ce;
+      background: #0ff1ce19;
+      color: #0ff1ce;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background .19s, color .19s;
+    }
+    #admin-panel button:hover {
+      background: #0ff1ce;
+      color: #181c29;
+      border: 1.5px solid #fff;
+    }
+    /* --- End new styles --- */
+    /* --- Keep the rest of your styles here, unchanged --- */
     .startup-bg {
       position: fixed;
       z-index: 5000;
@@ -90,7 +127,6 @@
       opacity: 1;
       transition: opacity .7s;
     }
-
     .password-panel {
       display: none;
       flex-direction: column;
@@ -153,7 +189,6 @@
       letter-spacing: .09em;
       opacity: 0.87;
     }
-
     .navbar {
       position: fixed;
       top: 0; 
@@ -520,113 +555,50 @@
       }
       return sid;
     }
-  </script>
-</head>
-<body>
-  <!-- Startup Animation -->
-  <div id="startup-bg" class="startup-bg">
-    <div class="startup-panel">
-      <pre class="startup-coding" id="startup-coding"></pre>
-      <div class="startup-msg" id="startup-bootmsg">
-        Booting up site...
-      </div>
-      <div class="startup-msg" id="startup-welcome">
-        Welcome
-      </div>
-      <!-- Password screen -->
-      <div class="password-panel" id="password-panel">
-        <div class="password-title">Enter Access Password</div>
-        <input class="password-input" id="password-input" type="password" autocomplete="off" placeholder="Password">
-        <button class="password-btn" id="password-btn">Access</button>
-        <div class="password-error" id="password-error"></div>
-      </div>
-    </div>
-  </div>
-  <!-- End Startup Animation -->
+    // --- Admin state and flashbang ---
+    let isAdmin = false;
+    let myUsername = "";
+    let chatReady = false;
+    let sessionId = getSessionId();
+    function updateAdminStatus() {
+      gs('getStellarUsername', sessionId, function(res){
+        if(typeof res === "object" && res.username) {
+          myUsername = res.username;
+          isAdmin = !!res.isAdmin;
+          chatReady = true;
+          renderAdminPanel();
+        }
+      });
+    }
+    function renderAdminPanel() {
+      const adminPanel = document.getElementById('admin-panel');
+      if (!adminPanel) return;
+      adminPanel.style.display = isAdmin ? '' : 'none';
+    }
+    function triggerFlashBang() {
+      gs('triggerFlashBang', sessionId, function(res){
+        if(res) {
+          showFlashBang();
+        } else {
+          alert("Failed to trigger flashbang (admin only).");
+        }
+      });
+    }
+    function pollFlashBang() {
+      gs('getFlashBang', {}, function(active){
+        if(active) showFlashBang();
+      });
+    }
+    function showFlashBang() {
+      if(document.getElementById('flashbang-overlay')) return;
+      const overlay = document.createElement('div');
+      overlay.id = 'flashbang-overlay';
+      document.body.appendChild(overlay);
+      setTimeout(() => { overlay.style.opacity = '0'; }, 280);
+      setTimeout(() => { overlay.remove(); }, 1500);
+    }
+    setInterval(pollFlashBang, 1300);
 
-  <div id="username-modal-bg" class="stellar-modal-bg" style="display:none;">
-    <div class="stellar-modal">
-      <div class="modal-title">Enter a username to join chat</div>
-      <div class="modal-error" id="modal-error"></div>
-      <input class="modal-input" id="modal-username" type="text" placeholder="Username" maxlength="20" autocomplete="off" />
-      <button class="modal-btn" onclick="submitUsername()">Enter Chat</button>
-    </div>
-  </div>
-  <nav class="navbar">
-    <button class="nav-icon active" id="nav-home" title="Home" tabindex="0" aria-label="Home">
-      <svg width="28" height="28" fill="none" stroke="#0ff1ce" stroke-width="2" viewBox="0 0 24 24">
-        <path d="M4 12l8-8 8 8"/><path d="M4 12v8h16v-8"/>
-      </svg>
-    </button>
-    <button class="nav-icon" id="nav-arcade" title="Arcade" tabindex="0" aria-label="Arcade">
-      <svg width="28" height="28" fill="none" stroke="#0ff1ce" stroke-width="2" viewBox="0 0 24 24">
-        <rect x="2" y="8" width="20" height="8" rx="4"/>
-        <circle cx="7" cy="12" r="1.5"/>
-        <circle cx="17" cy="12" r="1.5"/>
-        <path d="M12 12v2"/>
-      </svg>
-    </button>
-    <button class="nav-icon" id="nav-settings" title="Settings" tabindex="0" aria-label="Settings">
-      <svg width="28" height="28" fill="none" stroke="#0ff1ce" stroke-width="2" viewBox="0 0 24 24">
-        <circle cx="12" cy="12" r="3"/>
-        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h0a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h0a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v0a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
-      </svg>
-    </button>
-    <button class="nav-icon" id="nav-chat" title="Chat" tabindex="0" aria-label="Chat">
-      <svg width="28" height="28" fill="none" stroke="#0ff1ce" stroke-width="2" viewBox="0 0 24 24">
-        <path d="M21 11.5a8.38 8.38 0 0 1-1.9 5.4A8.5 8.5 0 0 1 12 21a8.38 8.38 0 0 1-5.4-1.9L3 21l1.4-3.6A8.38 8.38 0 0 1 3 11.5 8.5 8.5 0 0 1 12 3a8.5 8.5 0 0 1 8.5 8.5Z"/>
-      </svg>
-    </button>
-  </nav>
-  <main>
-    <section class="stellar-card" id="stellar-content">
-      <div class="stellar-title" id="stellar-title">st4rdust</div>
-      <div class="stellar-section active" id="section-home">
-        <div class="stellar-desc">
-          Welcome to the future! <br>
-          st4rdust is your portal to an animated, interactive, and futuristic web experience.<br>
-          <span style="opacity:.7;">Use the menu to explore Arcade and Settings!</span>
-        </div>
-        <button class="neon-btn" id="stellar-btn" onclick="stellarEffect()">Engage Warp Drive</button>
-      </div>
-      <div class="stellar-section" id="section-arcade">
-        <div class="stellar-title" style="font-size:2rem;margin-bottom:12px">Arcade</div>
-        <div class="stellar-desc">
-          <span style="font-size:1.5em; filter:drop-shadow(0 0 6px #0ff1ce77);">&#127918;</span><br>
-          <b>Coming soon:</b> Futuristic mini-games. <br>
-          <span style="opacity:0.8;">Stay tuned for the next level of fun!</span>
-        </div>
-        <button class="neon-btn" onclick="stellarGamePreview()">Preview FX</button>
-      </div>
-      <div class="stellar-section" id="section-settings">
-        <div class="stellar-title" style="font-size:2rem;margin-bottom:12px">Settings</div>
-        <form id="settings-form" style="margin-top:18px;">
-          <label style="display:block; margin-bottom:12px;">
-            <span>Neon Intensity</span>
-            <input type="range" id="neon-intensity" min="0" max="2" step="0.01" value="1"
-              style="width: 160px; margin-left: 12px;">
-          </label>
-          <label style="display:block; margin-bottom:12px;">
-            <span>Animation Speed</span>
-            <input type="range" id="anim-speed" min="0.4" max="2" step="0.01" value="1"
-              style="width: 160px; margin-left: 12px;">
-          </label>
-          <button class="neon-btn" type="button" onclick="applySettings()">Apply Settings</button>
-        </form>
-      </div>
-      <div class="stellar-section" id="section-chat">
-        <div class="stellar-title" style="font-size:2rem;margin-bottom:12px">Chat</div>
-        <div class="chat-window">
-          <div class="chat-messages" id="chat-messages"></div>
-          <form class="chat-input-row" id="chat-form" onsubmit="sendChatMessage(event)">
-            <input class="chat-input" id="chat-input" type="text" placeholder="Type your message..." autocomplete="off" maxlength="200"/>
-            <button class="chat-send-btn" type="submit">Send</button>
-          </form>
-        </div>
-      </div>
-    </section>
-  </main>
-  <script>
     // --- Startup animation ---
     // Fake coding lines & confirmations
     const startupCodingBlocks = [
@@ -732,12 +704,7 @@
       // Start coding animation
       typeStartupCoding();
       // Username check (main app)
-      gs('getStellarUsername', getSessionId(), function(name){
-        if(name && name.length >= 3) {
-          myUsername = name;
-          chatReady = true;
-        }
-      });
+      updateAdminStatus();
       // Password submit
       document.getElementById('password-btn').onclick = checkPassword;
       document.getElementById('password-input').addEventListener('keydown', function(e){
@@ -796,10 +763,6 @@
       if(section === 'chat' && chatReady) setTimeout(() => document.getElementById('chat-input').focus(), 300);
       if(section === 'chat') showChatOrModal();
     }
-    let chatReady = false;
-    let sessionId = getSessionId();
-    let myUsername = "";
-    let chatTimer = null;
     function showUsernameModal(err) {
       document.getElementById('modal-error').textContent = err||"";
       document.getElementById('modal-username').value = "";
@@ -810,14 +773,14 @@
       document.getElementById('username-modal-bg').style.display = "none";
     }
     function submitUsername() {
-      const val = document.getElementById('modal-username').value.trim().replace(/[^A-Za-z0-9_\- ]/g, "");
+      const val = document.getElementById('modal-username').value.trim().replace(/[^A-Za-z0-9_\-★ ]/g, "");
       if(!val || val.length < 3) {
         document.getElementById('modal-error').textContent = "Username must be at least 3 characters.";
         return;
       }
       gs('setStellarUsername', { sessionId: sessionId, username: val }, function(success) {
         if(success) {
-          myUsername = val;
+          updateAdminStatus();
           hideUsernameModal();
           chatReady = true;
           showChat();
@@ -829,6 +792,7 @@
     document.getElementById('modal-username').addEventListener('keydown', function(e){
       if(e.key === "Enter") submitUsername();
     });
+    let chatTimer = null;
     function showChatOrModal() {
       if(!chatReady) {
         showUsernameModal();
@@ -852,9 +816,15 @@
         chatMessagesDiv.innerHTML = "";
         messages.forEach(msg => {
           const msgDiv = document.createElement('div');
-          msgDiv.className = 'chat-msg' +
-            (msg.user === myUsername ? ' you' : msg.user === "StellarBot" ? ' bot' : '');
-          msgDiv.innerHTML = '<span class="chat-user">' + escapeHtml(msg.user) + ':</span> ';
+          let role = '';
+          if(msg.user === myUsername) role = 'you';
+          else if(msg.user === "StellarBot") role = 'bot';
+          else role = 'other';
+          msgDiv.className = 'chat-msg ' + role;
+          msgDiv.style.alignSelf = (role === 'you') ? 'flex-end' : 'flex-start';
+          let userLabel = escapeHtml(msg.user) + ':';
+          if(msg.user.indexOf('★') !== -1) userLabel = '★ ' + userLabel;
+          msgDiv.innerHTML = '<span class="chat-user">' + userLabel + '</span> ';
           const spanMsg = document.createElement('span');
           spanMsg.innerText = msg.text;
           msgDiv.appendChild(spanMsg);
@@ -893,5 +863,115 @@
       });
     }
   </script>
+</head>
+<body>
+  <!-- Startup Animation -->
+  <div id="startup-bg" class="startup-bg">
+    <div class="startup-panel">
+      <pre class="startup-coding" id="startup-coding"></pre>
+      <div class="startup-msg" id="startup-bootmsg">
+        Booting up site...
+      </div>
+      <div class="startup-msg" id="startup-welcome">
+        Welcome
+      </div>
+      <!-- Password screen -->
+      <div class="password-panel" id="password-panel">
+        <div class="password-title">Enter Access Password</div>
+        <input class="password-input" id="password-input" type="password" autocomplete="off" placeholder="Password">
+        <button class="password-btn" id="password-btn">Access</button>
+        <div class="password-error" id="password-error"></div>
+      </div>
+    </div>
+  </div>
+  <!-- End Startup Animation -->
+
+  <div id="username-modal-bg" class="stellar-modal-bg" style="display:none;">
+    <div class="stellar-modal">
+      <div class="modal-title">Enter a username to join chat</div>
+      <div class="modal-error" id="modal-error"></div>
+      <input class="modal-input" id="modal-username" type="text" placeholder="Username" maxlength="20" autocomplete="off" />
+      <button class="modal-btn" onclick="submitUsername()">Enter Chat</button>
+    </div>
+  </div>
+  <nav class="navbar">
+    <button class="nav-icon active" id="nav-home" title="Home" tabindex="0" aria-label="Home">
+      <svg width="28" height="28" fill="none" stroke="#0ff1ce" stroke-width="2" viewBox="0 0 24 24">
+        <path d="M4 12l8-8 8 8"/><path d="M4 12v8h16v-8"/>
+      </svg>
+    </button>
+    <button class="nav-icon" id="nav-arcade" title="Arcade" tabindex="0" aria-label="Arcade">
+      <svg width="28" height="28" fill="none" stroke="#0ff1ce" stroke-width="2" viewBox="0 0 24 24">
+        <rect x="2" y="8" width="20" height="8" rx="4"/>
+        <circle cx="7" cy="12" r="1.5"/>
+        <circle cx="17" cy="12" r="1.5"/>
+        <path d="M12 12v2"/>
+      </svg>
+    </button>
+    <button class="nav-icon" id="nav-settings" title="Settings" tabindex="0" aria-label="Settings">
+      <svg width="28" height="28" fill="none" stroke="#0ff1ce" stroke-width="2" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="3"/>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h0a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h0a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v0a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+      </svg>
+    </button>
+    <button class="nav-icon" id="nav-chat" title="Chat" tabindex="0" aria-label="Chat">
+      <svg width="28" height="28" fill="none" stroke="#0ff1ce" stroke-width="2" viewBox="0 0 24 24">
+        <path d="M21 11.5a8.38 8.38 0 0 1-1.9 5.4A8.5 8.5 0 0 1 12 21a8.38 8.38 0 0 1-5.4-1.9L3 21l1.4-3.6A8.38 8.38 0 0 1 3 11.5 8.5 8.5 0 0 1 12 3a8.5 8.5 0 0 1 8.5 8.5Z"/>
+      </svg>
+    </button>
+  </nav>
+  <main>
+    <section class="stellar-card" id="stellar-content">
+      <div class="stellar-title" id="stellar-title">st4rdust</div>
+      <div class="stellar-section active" id="section-home">
+        <div class="stellar-desc">
+          Welcome to the future! <br>
+          st4rdust is your portal to an animated, interactive, and futuristic web experience.<br>
+          <span style="opacity:.7;">Use the menu to explore Arcade and Settings!</span>
+        </div>
+        <button class="neon-btn" id="stellar-btn" onclick="stellarEffect()">Engage Warp Drive</button>
+      </div>
+      <div class="stellar-section" id="section-arcade">
+        <div class="stellar-title" style="font-size:2rem;margin-bottom:12px">Arcade</div>
+        <div class="stellar-desc">
+          <span style="font-size:1.5em; filter:drop-shadow(0 0 6px #0ff1ce77);">&#127918;</span><br>
+          <b>Coming soon:</b> Futuristic mini-games. <br>
+          <span style="opacity:0.8;">Stay tuned for the next level of fun!</span>
+        </div>
+        <button class="neon-btn" onclick="stellarGamePreview()">Preview FX</button>
+      </div>
+      <div class="stellar-section" id="section-settings">
+        <div class="stellar-title" style="font-size:2rem;margin-bottom:12px">Settings</div>
+        <form id="settings-form" style="margin-top:18px;">
+          <label style="display:block; margin-bottom:12px;">
+            <span>Neon Intensity</span>
+            <input type="range" id="neon-intensity" min="0" max="2" step="0.01" value="1"
+              style="width: 160px; margin-left: 12px;">
+          </label>
+          <label style="display:block; margin-bottom:12px;">
+            <span>Animation Speed</span>
+            <input type="range" id="anim-speed" min="0.4" max="2" step="0.01" value="1"
+              style="width: 160px; margin-left: 12px;">
+          </label>
+          <button class="neon-btn" type="button" onclick="applySettings()">Apply Settings</button>
+        </form>
+      </div>
+      <div class="stellar-section" id="section-chat">
+        <div class="stellar-title" style="font-size:2rem;margin-bottom:12px">Chat</div>
+        <!-- ADMIN PANEL: only visible to admins -->
+        <div id="admin-panel">
+          <b>Admin Panel</b><br>
+          <button onclick="triggerFlashBang()">💥 Flash Bang (all users)</button>
+        </div>
+        <div class="chat-window">
+          <div class="chat-messages" id="chat-messages"></div>
+          <form class="chat-input-row" id="chat-form" onsubmit="sendChatMessage(event)">
+            <input class="chat-input" id="chat-input" type="text" placeholder="Type your message..." autocomplete="off" maxlength="200"/>
+            <button class="chat-send-btn" type="submit">Send</button>
+          </form>
+        </div>
+      </div>
+    </section>
+  </main>
 </body>
 </html>
